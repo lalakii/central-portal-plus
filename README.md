@@ -13,7 +13,7 @@ Note: This is a third party plugin.
 Apply this plugin in gradle:
 ```kts
 plugins {
-    id("cn.lalaki.central") version "1.2.5"
+    id("cn.lalaki.central") version "1.2.6"
 }
 ```
 
@@ -22,11 +22,20 @@ Add configuration:
 val localMavenRepo = uri("path/of/local_repo") // The path is recommended to be set to an empty directory
 centralPortalPlus {
     url = localMavenRepo
+    
+    // Configure user token.
     username = "..."
     password = "..."
+    // or load from xml file
+    tokenXml = uri("D:\\user_token.xml")
+    
     publishingType = PublishingType.USER_MANAGED // or PublishingType.AUTOMATIC
 }
 ```
+About **user_token.xml**, save it to a file.
+
+<img src="https://fastly.jsdelivr.net/gh/lalakii/lalakii.github.io@master/tokenXml.jpg" width="420" alt="tokenXml">
+
 Configure maven-publish as before, doc: [Maven Publish Plugin](https://docs.gradle.org/current/userguide/publishing_maven.html), or see: [sample/build.gradle.kts](https://github.com/lalakii/central-portal-plus/blob/master/sample/build.gradle.kts)
 ```kts
 publishing {

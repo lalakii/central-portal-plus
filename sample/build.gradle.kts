@@ -18,8 +18,9 @@ android {
 group = "cn.lalaki.example"
 version = "1.0.2"
 centralPortalPlus {
-    username = System.getenv("TEMP_USER")
-    password = System.getenv("TEMP_PASS")
+    // username = System.getenv("TEMP_USER")
+    // password = System.getenv("TEMP_PASS")
+    tokenXml = uri("D:\\user_token.xml")
     publishingType = PublishingType.USER_MANAGED
 }
 signing {
