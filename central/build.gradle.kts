@@ -119,4 +119,5 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.commons.io)
     implementation(libs.stdlib.jdk8)
+    implementation(libs.jackson.dataformat.xml)
 }

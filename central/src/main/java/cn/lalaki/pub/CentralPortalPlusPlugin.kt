@@ -20,6 +20,7 @@ class CentralPortalPlusPlugin :
     override var username: String? = null
     override var password: String? = null
     override var publishingType: PublishingType? = null
+    override var tokenXml: URI? = null
 
     override fun apply(target: Project) {
         val portalConf =
@@ -43,6 +44,7 @@ class CentralPortalPlusPlugin :
             }
             this.username = portalConf.username
             this.password = portalConf.password
+            this.tokenXml = portalConf.tokenXml
             this.publishingType = portalConf.publishingType
             val tasks = project.tasks
             val cleanLocalRepoTask =

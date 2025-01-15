@@ -22,6 +22,9 @@ abstract class BaseCentralPortalPlusExtension {
     @get:Optional
     abstract var url: URI?
 
+    @get:Optional
+    abstract var tokenXml: URI?
+
     /***
      * The endpoint has two optional query parameters.
      *
