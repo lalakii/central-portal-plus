@@ -4,6 +4,8 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/6ca71f005bd44dc4893761c16007b0ea)](https://app.codacy.com/gh/lalakii/central-portal-plus/dashboard)
 ![License: Apache-2.0 (shields.io)](https://img.shields.io/badge/License-Apache--2.0-c02041?logo=apache)
 
+[<img src="icon.png" width="64" alt="CentralPortalPlus">](https://central.sonatype.com/artifact/cn.lalaki.central/central)
+
 The plugin implements sonatype's [Central Publisher API](https://central.sonatype.com/api-doc) (part of).
 
 It will call maven-publish to generate artifacts and publish them to [sonatype's central portal](https://central.sonatype.com/).
