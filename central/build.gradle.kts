@@ -5,9 +5,7 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 val javaVersion = JavaVersion.VERSION_17.majorVersion
 val projectUrl = "https://github.com/lalakii/central-portal-plus"
-val central: PluginDependency =
-    libs.plugins.central.portal.plus
-        .get()
+val central: PluginDependency = libs.plugins.central.portal.plus.get()
 group = central.pluginId
 version = central.version
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
@@ -29,6 +27,7 @@ detekt {
             .toString()
     config.setFrom(file("config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
+    autoCorrect = true
 }
 tasks.withType<Detekt>().configureEach {
     jvmTarget = javaVersion
@@ -95,23 +94,6 @@ publishing {
             url = uri("./repo/")
         }
     }
-    publications {
-        create<MavenPublication>("CentralPortalPlus") {
-            this.pom.withXml {
-                val node = asNode().appendNode("dependencies")
-                project.configurations.runtimeClasspath
-                    .get()
-                    .resolvedConfiguration.firstLevelModuleDependencies
-                    .forEach {
-                        val dn = node.appendNode("dependency")
-                        dn.appendNode("groupId", it.moduleGroup)
-                        dn.appendNode("artifactId", it.moduleName)
-                        dn.appendNode("version", it.moduleVersion)
-                        dn.appendNode("scope", "runtime")
-                    }
-            }
-        }
-    }
 }
 dependencies {
     implementation(libs.gson)
@@ -119,5 +101,5 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.commons.io)
     implementation(libs.stdlib.jdk8)
-    implementation(libs.jackson.dataformat.xml)
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${libs.versions.detekt.get()}")
 }
