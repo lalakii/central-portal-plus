@@ -1,8 +1,8 @@
 [versions]
 kotlin = "2.1.10"
 android-gradle = "8.7.3"
-central-portal-plus = "1.2.7"
-central-portal-plus-last = "1.2.7"
+central-portal-plus = "1.2.8"
+central-portal-plus-last = "1.2.8"
 detekt =  "1.23.7"
 [libraries]
 commons-io = { module = "commons-io:commons-io", version = "2.18.0" }

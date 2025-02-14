@@ -15,9 +15,13 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.toPath
 
 abstract class AbstractTask : DefaultTask() {
+    private val sProject by lazy {
+        CentralPortalPlusPlugin.sProject!!
+    }
+
     @get:Internal
     val plugin: CentralPortalPlusPlugin by lazy {
-        project.plugins.getPlugin(CentralPortalPlusPlugin::class.java)
+        sProject.plugins.getPlugin(CentralPortalPlusPlugin::class.java)
     }
 
     @get:Internal
@@ -41,7 +45,8 @@ abstract class AbstractTask : DefaultTask() {
         val tokenXml = plugin.tokenXml?.toPath()
         if (tokenXml?.isRegularFile() == true) {
             try {
-                val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(tokenXml.toFile())
+                val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                    .parse(tokenXml.toFile())
                 username = findValueByTagName(doc, "username")
                 password = findValueByTagName(doc, "password")
             } catch (e: IOException) {
@@ -65,14 +70,14 @@ abstract class AbstractTask : DefaultTask() {
 
     @get:Internal
     val lastDeploymentsId by lazy {
-        Path(project.layout.projectDirectory.asFile.canonicalPath, ".lastDeploymentsId")
+        Path(sProject.layout.projectDirectory.asFile.canonicalPath, ".lastDeploymentsId")
     }
 
     @get:Internal
     val idArg by lazy {
         val arg = "utId"
-        if (project.hasProperty(arg)) {
-            project.property(arg).toString().trim()
+        if (sProject.hasProperty(arg)) {
+            sProject.property(arg).toString().trim()
         } else {
             ""
         }

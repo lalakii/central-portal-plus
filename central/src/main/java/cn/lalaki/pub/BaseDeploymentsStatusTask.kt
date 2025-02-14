@@ -70,7 +70,7 @@ abstract class BaseDeploymentsStatusTask : AbstractTask() {
                 logger.error(e.localizedMessage)
             }
         } else {
-            logger.error("{}: {}", resp.code, respText)
+            logger.error("{}: Id={} {}", resp.code, idArg, respText)
         }
     }
 
