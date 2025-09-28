@@ -4,6 +4,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 val javaVersion = JavaVersion.VERSION_17.majorVersion
+val projectName = "CentralPortalPlus"
 val projectUrl = "https://github.com/lalakii/central-portal-plus"
 val central: PluginDependency = libs.plugins.central.portal.plus.get()
 group = central.pluginId
@@ -42,9 +43,9 @@ signing {
 gradlePlugin {
     website = projectUrl
     vcsUrl = projectUrl
-    plugins.create("CentralPortalPlus") {
+    plugins.create(projectName) {
         id = group.toString()
-        displayName = "CentralPortalPlus"
+        displayName = projectName
         description = "Publish your artifacts to sonatype's central portal."
         tags = listOf("maven", "maven-central", "publisher", "sonatype", "gradle-plugin")
         implementationClass = "cn.lalaki.pub.CentralPortalPlusPlugin"
@@ -56,7 +57,7 @@ afterEvaluate {
         ) {
             doFirst {
                 pom.apply {
-                    name = "Central"
+                    name = projectName
                     url = projectUrl
                     description = "Publish your artifacts to sonatype's central portal."
                     licenses {

@@ -16,7 +16,7 @@ android {
 }
 /** The sample configuration is as follows **/
 group = "cn.lalaki.example"
-version = "1.0.2"
+version = "1.0.3"
 centralPortalPlus {
     // username = System.getenv("TEMP_USER")
     // password = System.getenv("TEMP_PASS")
