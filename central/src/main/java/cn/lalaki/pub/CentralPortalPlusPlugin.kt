@@ -22,10 +22,6 @@ class CentralPortalPlusPlugin :
     override var publishingType: PublishingType? = null
     override var tokenXml: URI? = null
 
-    companion object {
-        var sProject: Project? = null
-    }
-
     override fun apply(target: Project) {
         val portalConf =
             target.extensions.create(
@@ -33,7 +29,6 @@ class CentralPortalPlusPlugin :
                 BaseCentralPortalPlusExtension::class.java,
             )
         target.afterEvaluate { project ->
-            sProject = project
             if (portalConf.url == null) {
                 val publishConf =
                     project.extensions.findByType(PublishingExtension::class.java)

@@ -4,7 +4,7 @@ import org.apache.commons.io.FileUtils
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.charset.Charset
-
+@Suppress("NewApi")
 abstract class BaseDeleteDeploymentTask : AbstractTask() {
     @TaskAction
     fun launch() {
@@ -35,7 +35,7 @@ abstract class BaseDeleteDeploymentTask : AbstractTask() {
                     logger.lifecycle("Artifact with deployment id {} has been deleted", id)
                     lastDeployment?.delete()
                 } else {
-                    logger.error("{}: {}", it.code, it.body?.string())
+                    logger.error("{}: {}", it.code, it.body.string())
                 }
             }
     }

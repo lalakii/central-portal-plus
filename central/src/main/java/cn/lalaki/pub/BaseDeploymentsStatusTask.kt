@@ -2,13 +2,13 @@ package cn.lalaki.pub
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import okhttp3.internal.EMPTY_REQUEST
 import org.apache.commons.io.FileUtils
 import org.gradle.api.tasks.TaskAction
 import java.io.IOException
 import java.nio.charset.Charset
-
+@Suppress("NewApi")
 abstract class BaseDeploymentsStatusTask : AbstractTask() {
     @TaskAction
     fun launch() {
@@ -35,7 +35,7 @@ abstract class BaseDeploymentsStatusTask : AbstractTask() {
                             .addPathSegments("api/v1/publisher/status")
                             .addEncodedQueryParameter("id", id)
                             .build(),
-                    ).post(EMPTY_REQUEST)
+                    ).post("".toRequestBody())
                     .build(),
             ).execute()
             .use {
@@ -44,7 +44,7 @@ abstract class BaseDeploymentsStatusTask : AbstractTask() {
     }
 
     private fun handleResponse(resp: Response) {
-        val respText = resp.body?.string().toString()
+        val respText = resp.body.string()
         if (resp.isSuccessful) {
             try {
                 val gson = Gson().newBuilder().setPrettyPrinting().create()

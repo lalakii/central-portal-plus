@@ -19,6 +19,7 @@ import java.nio.file.Paths
  * @author lalaki (i@lalaki.cn)
  * @since Classes for publishing artifacts to the publisher API.
  */
+@Suppress("NewApi")
 abstract class BasePublishingTask : AbstractTask() {
     private val params by lazy {
         ZipParameters().apply {
@@ -36,12 +37,12 @@ abstract class BasePublishingTask : AbstractTask() {
         val url = plugin.url ?: throw NullPointerException("missing local maven repo, url=" + null)
         val dir = Paths.get(url).toFile()
         if (!dir.isDirectory) {
-            logger.error("local maven repo ({}) is not a folder.", dir)
+            logger.error("local maven repo ({}) is not a folder!", dir)
             return
         }
         val groups = dir.listFiles()
         if (groups == null) {
-            logger.error("local maven repo ({}) is empty.", dir)
+            logger.error("local maven repo ({}) is empty!", dir)
             return
         }
         var publishingType = plugin.publishingType
@@ -135,11 +136,7 @@ abstract class BasePublishingTask : AbstractTask() {
                     ).build(),
             ).execute()
             .use {
-                var respText = ""
-                val respBody = it.body
-                if (respBody != null) {
-                    respText = respBody.string()
-                }
+                val respText = it.body.string()
                 if (!it.isSuccessful) {
                     logger.error("{}: {}", it.code, respText)
                 } else {

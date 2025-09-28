@@ -56,6 +56,7 @@ afterEvaluate {
         ) {
             doFirst {
                 pom.apply {
+                    name = "Central"
                     url = projectUrl
                     description = "Publish your artifacts to sonatype's central portal."
                     licenses {
@@ -85,8 +86,11 @@ afterEvaluate {
     }
 }
 centralPortalPlus {
-    username = System.getenv("TEMP_USER")
-    password = System.getenv("TEMP_PASS")
+    //username = System.getenv("TEMP_USER")
+    //password = System.getenv("TEMP_PASS")
+    // or
+
+    tokenXml = uri("D:\\user_token.xml")
 }
 publishing {
     repositories {

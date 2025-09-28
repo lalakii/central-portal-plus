@@ -13,6 +13,7 @@ import java.nio.file.StandardCopyOption
  * @author lalakii (i@lalaki.cn)
  * @since This class is used to clean the local maven repository.
  */
+@Suppress("NewApi")
 abstract class BaseCleanLocalMavenRepoTask : AbstractTask() {
     /**
      * clean local maven repo

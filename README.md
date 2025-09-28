@@ -17,7 +17,7 @@ Note: This is a third party plugin.
 Apply this plugin in gradle:
 ```kts
 plugins {
-    id("cn.lalaki.central") version "1.2.8"
+    id("cn.lalaki.central") version "1.2.9"
 }
 ```
 

@@ -11,7 +11,7 @@ plugins {
 android {
     namespace = "cn.lalaki.sample"
     defaultConfig {
-        compileSdk = 35
+        compileSdk = 36
     }
 }
 /** The sample configuration is as follows **/

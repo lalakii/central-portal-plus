@@ -13,15 +13,11 @@ import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.io.path.Path
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.toPath
-
+@Suppress("NewApi")
 abstract class AbstractTask : DefaultTask() {
-    private val sProject by lazy {
-        CentralPortalPlusPlugin.sProject!!
-    }
-
     @get:Internal
     val plugin: CentralPortalPlusPlugin by lazy {
-        sProject.plugins.getPlugin(CentralPortalPlusPlugin::class.java)
+        project.plugins.getPlugin(CentralPortalPlusPlugin::class.java)
     }
 
     @get:Internal
@@ -61,8 +57,8 @@ abstract class AbstractTask : DefaultTask() {
             Request.Builder().addHeader(
                 "Authorization",
                 basic(
-                    username!!,
-                    password!!,
+                    username,
+                    password,
                 ).replace("Basic", "Bearer"),
             )
         }
@@ -70,14 +66,14 @@ abstract class AbstractTask : DefaultTask() {
 
     @get:Internal
     val lastDeploymentsId by lazy {
-        Path(sProject.layout.projectDirectory.asFile.canonicalPath, ".lastDeploymentsId")
+        Path(project.layout.projectDirectory.asFile.canonicalPath, ".lastDeploymentsId")
     }
 
     @get:Internal
     val idArg by lazy {
         val arg = "utId"
-        if (sProject.hasProperty(arg)) {
-            sProject.property(arg).toString().trim()
+        if (project.hasProperty(arg)) {
+            project.property(arg).toString().trim()
         } else {
             ""
         }
@@ -85,8 +81,9 @@ abstract class AbstractTask : DefaultTask() {
 
     fun publishMsg() {
         logger.lifecycle(
-            "Due to the artifact's publishingType being {}" +
-                "Final confirmation is required on the sonatype's central portal:{}" +
+            "Due to the artifact's publishingType " +
+                "being {}Final confirmation is required on the " +
+                "sonatype's central portal: {}" +
                 "https://central.sonatype.com/publishing/deployments",
             PublishingType.USER_MANAGED.name + System.lineSeparator() + System.lineSeparator(),
             System.lineSeparator(),
