@@ -29,6 +29,7 @@ class CentralPortalPlusPlugin :
                 BaseCentralPortalPlusExtension::class.java,
             )
         target.afterEvaluate { project ->
+            val workDir = project.layout.projectDirectory.asFile.canonicalPath
             if (portalConf.url == null) {
                 val publishConf =
                     project.extensions.findByType(PublishingExtension::class.java)
@@ -48,7 +49,10 @@ class CentralPortalPlusPlugin :
             this.publishingType = portalConf.publishingType
             val tasks = project.tasks
             val cleanLocalRepoTask =
-                tasks.register("cleanLocalMavenRepo", BaseCleanLocalMavenRepoTask::class.java)
+                tasks.register("cleanLocalMavenRepo", BaseCleanLocalMavenRepoTask::class.java) {
+                    it.pluginContext = this
+                    it.workDir = workDir
+                }
             val defaultPublishTask = tasks.findByName("publish")
             val defaultCleanTask = tasks.findByName("clean")
             defaultCleanTask?.finalizedBy(cleanLocalRepoTask)
@@ -60,12 +64,20 @@ class CentralPortalPlusPlugin :
                     config.dependsOn(
                         defaultPublishTask,
                     )
+                    config.pluginContext = this
+                    config.workDir = workDir
                 }
             } else {
                 target.logger.error("missing default publish task!")
             }
-            tasks.register("dumpDeployment", BaseDeploymentsStatusTask::class.java)
-            tasks.register("deleteDeployment", BaseDeleteDeploymentTask::class.java)
+            tasks.register("dumpDeployment", BaseDeploymentsStatusTask::class.java) {
+                it.pluginContext = this
+                it.workDir = workDir
+            }
+            tasks.register("deleteDeployment", BaseDeleteDeploymentTask::class.java) {
+                it.pluginContext = this
+                it.workDir = workDir
+            }
         }
     }
 }
