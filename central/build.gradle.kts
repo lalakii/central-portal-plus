@@ -5,6 +5,7 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 val javaVersion = JavaVersion.VERSION_17.majorVersion
 val projectName = "CentralPortalPlus"
+val projectDescription = "Publish your artifacts to sonatype's central portal."
 val projectUrl = "https://github.com/lalakii/central-portal-plus"
 val central: PluginDependency = libs.plugins.central.portal.plus.get()
 group = central.pluginId
@@ -43,45 +44,45 @@ signing {
 gradlePlugin {
     website = projectUrl
     vcsUrl = projectUrl
-    plugins.create(projectName) {
-        id = group.toString()
-        displayName = projectName
-        description = "Publish your artifacts to sonatype's central portal."
-        tags = listOf("maven", "maven-central", "publisher", "sonatype", "gradle-plugin")
-        implementationClass = "cn.lalaki.pub.CentralPortalPlusPlugin"
+    plugins {
+        create(projectName) {
+            id = group.toString()
+            displayName = projectName
+            description = projectDescription
+            tags = listOf("maven", "maven-central", "publisher", "sonatype", "gradle-plugin")
+            implementationClass = "cn.lalaki.pub.CentralPortalPlusPlugin"
+        }
     }
 }
 afterEvaluate {
     tasks.withType(GenerateMavenPom::class.java) {
-        if (this.name.startsWith("generatePomFile", ignoreCase = true)
-        ) {
-            doFirst {
-                pom.apply {
-                    name = projectName
-                    url = projectUrl
-                    description = "Publish your artifacts to sonatype's central portal."
-                    licenses {
-                        license {
-                            name = "Apache-2.0"
-                            url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
-                        }
-                    }
-                    developers {
-                        developer {
-                            name = "lalakii"
-                            email = "i@lalaki.cn"
-                        }
-                    }
-                    organization {
-                        name = "lalakii"
-                        url = "https://lalaki.cn"
-                    }
-                    scm {
-                        connection = "scm:git:$projectUrl"
-                        developerConnection = "scm:git:$projectUrl"
-                        url = projectUrl
-                    }
+        pom.apply {
+            name = projectName
+            url = projectUrl
+            description = "Publish your artifacts to sonatype's central portal."
+            licenses {
+                license {
+                    name = "Apache-2.0"
+                    url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
                 }
+            }
+            issueManagement {
+                url = "${projectUrl}/issues"
+            }
+            developers {
+                developer {
+                    name = "lalakii"
+                    email = "i@lalaki.cn"
+                }
+            }
+            organization {
+                name = "lalakii"
+                url = "https://lalaki.cn"
+            }
+            scm {
+                connection = "scm:git:$projectUrl"
+                developerConnection = "scm:git:$projectUrl"
+                url = projectUrl
             }
         }
     }
