@@ -53,17 +53,25 @@ class CentralPortalPlusPlugin :
                     it.pluginContext = this
                     it.workDir = workDir
                 }
+            val defaultPublishTask = tasks.findByName("publish")
             val defaultCleanTask = tasks.findByName("clean")
             defaultCleanTask?.finalizedBy(cleanLocalRepoTask)
-            val publishToCentralPortalTask =
-                tasks.register("publishToCentralPortal", BasePublishingTask::class.java) {
+            if (defaultPublishTask != null) {
+                defaultPublishTask.dependsOn(cleanLocalRepoTask)
+                val publishToCentralPortalTask = tasks.register(
+                    "publishToCentralPortal",
+                    BasePublishingTask::class.java
+                ) { it ->
                     it.dependsOn(
-                        cleanLocalRepoTask,
+                        defaultPublishTask,
                     )
                     it.pluginContext = this
                     it.workDir = workDir
-                    it.description = "Publish your artifacts to sonatype's central portal."
                 }
+                defaultPublishTask.finalizedBy(publishToCentralPortalTask.get())
+            } else {
+                target.logger.error("missing default publish task!")
+            }
             tasks.register("dumpDeployment", BaseDeploymentsStatusTask::class.java) {
                 it.pluginContext = this
                 it.workDir = workDir
@@ -72,8 +80,6 @@ class CentralPortalPlusPlugin :
                 it.pluginContext = this
                 it.workDir = workDir
             }
-            val defaultPublishTask = tasks.findByName("publish")
-            defaultPublishTask?.finalizedBy(publishToCentralPortalTask.get())
         }
     }
 }
