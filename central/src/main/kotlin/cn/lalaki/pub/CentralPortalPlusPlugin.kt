@@ -21,6 +21,7 @@ class CentralPortalPlusPlugin :
     override var password: String? = null
     override var publishingType: PublishingType? = null
     override var tokenXml: URI? = null
+    lateinit var workDir: String
 
     override fun apply(target: Project) {
         val portalConf =
@@ -28,11 +29,11 @@ class CentralPortalPlusPlugin :
                 "centralPortalPlus",
                 BaseCentralPortalPlusExtension::class.java,
             )
-        target.afterEvaluate { project ->
-            val workDir = project.layout.projectDirectory.asFile.canonicalPath
+        target.afterEvaluate { _ ->
+            workDir = target.layout.projectDirectory.asFile.canonicalPath
             if (portalConf.url == null) {
                 val publishConf =
-                    project.extensions.findByType(PublishingExtension::class.java)
+                    target.extensions.findByType(PublishingExtension::class.java)
                 if (publishConf is PublishingExtension) {
                     val localMavenRepo =
                         publishConf.repositories.find { it is MavenArtifactRepository }
@@ -47,38 +48,34 @@ class CentralPortalPlusPlugin :
             this.password = portalConf.password
             this.tokenXml = portalConf.tokenXml
             this.publishingType = portalConf.publishingType
-            val tasks = project.tasks
+            val tasks = target.tasks
             val cleanLocalRepoTask =
                 tasks.register("cleanLocalMavenRepo", BaseCleanLocalMavenRepoTask::class.java) {
                     it.pluginContext = this
-                    it.workDir = workDir
                 }
-            val defaultPublishTask = tasks.findByName("publish")
             val defaultCleanTask = tasks.findByName("clean")
-            defaultCleanTask?.finalizedBy(cleanLocalRepoTask)
+            defaultCleanTask?.finalizedBy(cleanLocalRepoTask.get())
+            tasks.register("dumpDeployment", BaseDeploymentsStatusTask::class.java) {
+                it.pluginContext = this
+            }
+            tasks.register("deleteDeployment", BaseDeleteDeploymentTask::class.java) {
+                it.pluginContext = this
+            }
+            val defaultPublishTask = tasks.findByName("publish")
             if (defaultPublishTask != null) {
-                defaultPublishTask.dependsOn(cleanLocalRepoTask)
+                defaultPublishTask.dependsOn(cleanLocalRepoTask.get())
                 val publishToCentralPortalTask = tasks.register(
                     "publishToCentralPortal",
                     BasePublishingTask::class.java
-                ) { it ->
+                ) {
                     it.dependsOn(
                         defaultPublishTask,
                     )
                     it.pluginContext = this
-                    it.workDir = workDir
                 }
                 defaultPublishTask.finalizedBy(publishToCentralPortalTask.get())
             } else {
                 target.logger.error("missing default publish task!")
-            }
-            tasks.register("dumpDeployment", BaseDeploymentsStatusTask::class.java) {
-                it.pluginContext = this
-                it.workDir = workDir
-            }
-            tasks.register("deleteDeployment", BaseDeleteDeploymentTask::class.java) {
-                it.pluginContext = this
-                it.workDir = workDir
             }
         }
     }

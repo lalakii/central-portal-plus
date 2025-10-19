@@ -20,9 +20,6 @@ abstract class AbstractTask : DefaultTask() {
     abstract var pluginContext: CentralPortalPlusPlugin
 
     @get:Internal
-    abstract var workDir: String
-
-    @get:Internal
     val client by lazy { OkHttpClient() }
 
     private fun findValueByTagName(doc: org.w3c.dom.Document, nodeName: String): String? {
@@ -68,7 +65,7 @@ abstract class AbstractTask : DefaultTask() {
 
     @get:Internal
     val lastDeploymentsId by lazy {
-        Path(workDir, ".lastDeploymentsId")
+        Path(pluginContext.workDir, ".lastDeploymentsId")
     }
 
     @get:Internal
