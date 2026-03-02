@@ -102,6 +102,7 @@ publishing {
     }
 }
 dependencies {
+    compileOnly(gradleApi())
     implementation(libs.gson)
     implementation(libs.zip4j)
     implementation(libs.okhttp)

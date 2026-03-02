@@ -24,6 +24,9 @@ class CentralPortalPlusPlugin :
     lateinit var workDir: String
 
     override fun apply(target: Project) {
+        val pluginManager = target.pluginManager
+        pluginManager.apply("signing")
+        pluginManager.apply("maven-publish")
         val portalConf =
             target.extensions.create(
                 "centralPortalPlus",

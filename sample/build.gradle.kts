@@ -5,8 +5,6 @@ import cn.lalaki.pub.BaseCentralPortalPlusExtension.PublishingType
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.central.portal.plus)
-    `maven-publish`
-    signing
 }
 android {
     namespace = "cn.lalaki.sample"
