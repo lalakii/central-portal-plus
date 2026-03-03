@@ -2,7 +2,7 @@
 kotlin = "2.3.10"
 android-gradle = "8.13.2"
 central-portal-plus = "2.0.3"
-central-portal-plus-last = "2.0.2"
+central-portal-plus-last = "2.0.3"
 detekt =  "1.23.8"
 [libraries]
 commons-io = { module = "commons-io:commons-io", version = "2.21.0" }

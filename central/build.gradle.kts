@@ -13,7 +13,6 @@ version = central.version
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    signing
     alias(libs.plugins.central.portal.plus) version libs.versions.central.portal.plus.last
     alias(libs.plugins.gradle.publish)
     alias(libs.plugins.detekt)
