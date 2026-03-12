@@ -9,6 +9,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
 import org.xml.sax.SAXException
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.io.path.Path
 import kotlin.io.path.isRegularFile
@@ -20,7 +21,13 @@ abstract class AbstractTask : DefaultTask() {
     abstract var pluginContext: CentralPortalPlusPlugin
 
     @get:Internal
-    val client by lazy { OkHttpClient() }
+    val client by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
+            .readTimeout(pluginContext.readTimeoutSeconds, TimeUnit.SECONDS)
+            .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS)
+            .build()
+    }
 
     private fun findValueByTagName(doc: org.w3c.dom.Document, nodeName: String): String? {
         val nodes = doc.documentElement.getElementsByTagName(nodeName)
