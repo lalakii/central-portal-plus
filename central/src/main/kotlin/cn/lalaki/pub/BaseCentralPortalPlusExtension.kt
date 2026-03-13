@@ -17,19 +17,25 @@ abstract class BaseCentralPortalPlusExtension {
     abstract var password: String?
 
     @get:Optional
+    abstract var tokenXml: URI?
+
+    @get:Optional
+    abstract var cookies: String?
+
+    @get:Optional
     abstract var publishingType: PublishingType?
 
     @get:Optional
     abstract var url: URI?
 
     @get:Optional
-    abstract var tokenXml: URI?
+    abstract var connectTimeoutSeconds: Long
 
-    var connectTimeoutSeconds: Long = 30
+    @get:Optional
+    abstract var readTimeoutSeconds: Long
 
-    var readTimeoutSeconds: Long = 120
-
-    var writeTimeoutSeconds: Long = 120
+    @get:Optional
+    abstract var writeTimeoutSeconds: Long
 
     /***
      * The endpoint has two optional query parameters.

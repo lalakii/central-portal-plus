@@ -15,14 +15,14 @@ import kotlin.io.path.Path
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.toPath
 
-@Suppress("NewApi")
 abstract class AbstractTask : DefaultTask() {
     @get:Internal
     abstract var pluginContext: CentralPortalPlusPlugin
 
     @get:Internal
     val client by lazy {
-        OkHttpClient.Builder().connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
+        OkHttpClient.Builder()
+            .connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
             .readTimeout(pluginContext.readTimeoutSeconds, TimeUnit.SECONDS)
             .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS).build()
     }
@@ -55,17 +55,20 @@ abstract class AbstractTask : DefaultTask() {
                 logger.error(e.localizedMessage)
             }
         }
+        val cookies = pluginContext.cookies
         if (username == null || password == null) {
+            if (cookies != null) {
+                return@lazy Request.Builder().addHeader("Cookie", cookies)
+            }
             throw SecurityException("No username or password set.")
-        } else {
-            Request.Builder().addHeader(
-                "Authorization",
-                basic(
-                    username,
-                    password,
-                ).replace("Basic", "Bearer"),
-            )
         }
+        Request.Builder().addHeader(
+            "Authorization",
+            basic(
+                username,
+                password,
+            ).replace("Basic", "Bearer"),
+        )
     }
 
     @get:Internal
@@ -86,11 +89,10 @@ abstract class AbstractTask : DefaultTask() {
     fun publishMsg() {
         val deploymentUrl = "https://central.sonatype.com/publishing/deployments"
         logger.lifecycle(
-            "Due to the artifact's " +
-                    "publishingType being {}{}{}" +
-                    "Final confirmation is required" +
-                    " on the sonatype's central portal: " +
-                    "{}{}",
+            "Due to the artifact's " + "publishingType being {}{}{}" +
+                "Final confirmation is required" +
+                " on the sonatype's central portal: " +
+                "{}{}",
             PublishingType.USER_MANAGED.name,
             System.lineSeparator(),
             System.lineSeparator(),
@@ -99,9 +101,5 @@ abstract class AbstractTask : DefaultTask() {
         )
     }
 
-    fun buildUrl() =
-        HttpUrl
-            .Builder()
-            .scheme("https")
-            .host("central.sonatype.com")
+    fun buildUrl() = HttpUrl.Builder().scheme("https").host("central.sonatype.com")
 }

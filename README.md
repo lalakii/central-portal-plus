@@ -17,7 +17,7 @@ Note: This is a third party plugin.
 Apply this plugin in gradle:
 ```kts
 plugins {
-    id("cn.lalaki.central") version "2.0.6"
+    id("cn.lalaki.central") version "2.0.7"
 }
 ```
 
@@ -32,6 +32,8 @@ centralPortalPlus {
     password = "..."
     // or load from xml file
     tokenXml = uri("D:\\user_token.xml")
+    // or set cookies
+    cookies = "..." // Check the HTTPs headers for cookies. -> https://central.sonatype.com
     
     publishingType = PublishingType.USER_MANAGED // or PublishingType.AUTOMATIC
 }

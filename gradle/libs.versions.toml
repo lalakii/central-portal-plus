@@ -1,8 +1,8 @@
 [versions]
 kotlin = "2.3.10"
 android-gradle = "8.13.2"
-central-portal-plus = "2.0.6"
-central-portal-plus-last = "2.0.5"
+central-portal-plus = "2.0.7"
+central-portal-plus-last = "2.0.7"
 detekt =  "1.23.8"
 [libraries]
 commons-io = { module = "commons-io:commons-io", version = "2.21.0" }
@@ -13,6 +13,6 @@ stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "android-gradle" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-gradle-publish = { id = "com.gradle.plugin-publish", version = "2.0.0" }
+gradle-publish = { id = "com.gradle.plugin-publish", version = "2.1.0" }
 central-portal-plus = { id = "cn.lalaki.central", version.ref = "central-portal-plus" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref="detekt" }

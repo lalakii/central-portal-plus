@@ -16,11 +16,21 @@ import java.net.URI
 class CentralPortalPlusPlugin :
     BaseCentralPortalPlusExtension(),
     Plugin<Project> {
+    companion object {
+        const val READ_TIMEOUT_DEFAULT = 120L
+        const val WRITE_TIMEOUT_DEFAULT = 120L
+        const val CONNECT_TIMEOUT_DEFAULT = 30L
+    }
+
     override var url: URI? = null
     override var username: String? = null
     override var password: String? = null
-    override var publishingType: PublishingType? = null
+    override var cookies: String? = null
     override var tokenXml: URI? = null
+    override var publishingType: PublishingType? = null
+    override var connectTimeoutSeconds: Long = CONNECT_TIMEOUT_DEFAULT
+    override var readTimeoutSeconds: Long = READ_TIMEOUT_DEFAULT
+    override var writeTimeoutSeconds: Long = WRITE_TIMEOUT_DEFAULT
     lateinit var workDir: String
 
     override fun apply(target: Project) {
@@ -47,13 +57,7 @@ class CentralPortalPlusPlugin :
             } else {
                 this.url = portalConf.url
             }
-            this.username = portalConf.username
-            this.password = portalConf.password
-            this.tokenXml = portalConf.tokenXml
-            this.connectTimeoutSeconds = portalConf.connectTimeoutSeconds
-            this.readTimeoutSeconds = portalConf.readTimeoutSeconds
-            this.writeTimeoutSeconds = portalConf.writeTimeoutSeconds
-            this.publishingType = portalConf.publishingType
+            loadUserConfig(portalConf)
             val tasks = target.tasks
             val cleanLocalRepoTask =
                 tasks.register("cleanLocalMavenRepo", BaseCleanLocalMavenRepoTask::class.java) {
@@ -83,6 +87,26 @@ class CentralPortalPlusPlugin :
             } else {
                 target.logger.error("missing default publish task!")
             }
+        }
+    }
+
+    private fun loadUserConfig(portalConf: BaseCentralPortalPlusExtension) {
+        this.username = portalConf.username
+        this.password = portalConf.password
+        this.tokenXml = portalConf.tokenXml
+        this.cookies = portalConf.cookies
+        this.publishingType = portalConf.publishingType
+        val connectTimeout = portalConf.connectTimeoutSeconds
+        if (connectTimeout != 0L) {
+            this.connectTimeoutSeconds = connectTimeout
+        }
+        val readTimeout = portalConf.readTimeoutSeconds
+        if (readTimeout != 0L) {
+            this.readTimeoutSeconds = readTimeout
+        }
+        val writeTimeout = portalConf.writeTimeoutSeconds
+        if (writeTimeout != 0L) {
+            this.writeTimeoutSeconds = writeTimeout
         }
     }
 }

@@ -1,10 +1,13 @@
 package cn.lalaki.pub
 
 import cn.lalaki.pub.BaseCentralPortalPlusExtension.PublishingType
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.CompressionLevel
 import okhttp3.MultipartBody
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
@@ -19,7 +22,6 @@ import java.nio.file.Paths
  * @author lalaki (i@lalaki.cn)
  * @since Classes for publishing artifacts to the publisher API.
  */
-@Suppress("NewApi")
 abstract class BasePublishingTask : AbstractTask() {
     private val params by lazy {
         ZipParameters().apply {
@@ -34,7 +36,8 @@ abstract class BasePublishingTask : AbstractTask() {
      */
     @TaskAction
     fun launch() {
-        val url = pluginContext.url ?: throw NullPointerException("missing local maven repo, url=" + null)
+        val url =
+            pluginContext.url ?: throw NullPointerException("missing local maven repo, url=" + null)
         val dir = Paths.get(url).toFile()
         if (!dir.isDirectory) {
             logger.error("local maven repo ({}) is not a folder!", dir)
@@ -61,8 +64,11 @@ abstract class BasePublishingTask : AbstractTask() {
         bundle: File,
         groups: Array<File>,
     ) {
+        val useCookies =
+            pluginContext.username == null && pluginContext.password == null && pluginContext.tokenXml == null
         for (group in groups) {
-            publishComponent(publishingType, createBundleZip(bundle, group), bundle)
+            val deploymentName = createBundleZip(bundle, group)
+            publishComponent(deploymentName, bundle, publishingType, useCookies)
         }
     }
 
@@ -82,21 +88,39 @@ abstract class BasePublishingTask : AbstractTask() {
         return deploymentName
     }
 
-    private fun saveLastDeploymentId(respText: String) {
+    private fun getDeploymentIdFromJson(jsonText: String): String? {
+        val index = jsonText.indexOf("deploymentId")
+        if (index != -1) {
+            val mapType = object : TypeToken<Map<String, Any?>>() {}.type
+            val map: Map<String, Any?> = Gson().fromJson(jsonText, mapType)
+            if (map.containsKey("deploymentId")) {
+                val objId = map["deploymentId"]
+                return objId as String?
+            }
+        }
+        return null
+    }
+
+    private fun saveLastDeploymentId(rawText: String) {
+        var respText = rawText
+        try {
+            val id = getDeploymentIdFromJson(rawText)
+            if (id is String) {
+                respText = id
+            }
+        } catch (_: Throwable) {
+        }
         val lastDeployment = lastDeploymentsId.toFile()
         val projectDir = lastDeployment.parentFile
         if (!projectDir.exists()) return
         FileUtils.write(lastDeployment, respText, Charset.defaultCharset())
         val ignore = File(projectDir, ".gitignore")
         if (ignore.exists()) {
-            val allLines =
-                FileUtils
-                    .readLines(
-                        ignore,
-                        Charset.defaultCharset(),
-                    )
-            if (allLines
-                    .find { line -> line.contains(lastDeployment.name, ignoreCase = true) }
+            val allLines = FileUtils.readLines(
+                ignore,
+                Charset.defaultCharset(),
+            )
+            if (allLines.find { line -> line.contains(lastDeployment.name, ignoreCase = true) }
                     .isNullOrEmpty()
             ) {
                 allLines.add(lastDeployment.name)
@@ -111,43 +135,65 @@ abstract class BasePublishingTask : AbstractTask() {
         }
     }
 
-    private fun publishComponent(
-        publishingType: String,
+    private fun buildRequest(
         deploymentName: String,
         bundle: File,
+        publishingType: String,
+        useCookies: Boolean
+    ): Request {
+        if (useCookies) {
+            return request.url(
+                buildUrl().addPathSegments("api/internal/publisher/uploadFile").build()
+            )
+                .post(
+                    MultipartBody.Builder().setType(MultipartBody.FORM)
+                        .addFormDataPart("deploymentName", deploymentName)
+                        .addFormDataPart("description", "").addFormDataPart(
+                            "file",
+                            bundle.name,
+                            bundle.asRequestBody()
+                        ).build()
+                ).build()
+        } else {
+            return request.url(
+                buildUrl().addPathSegments("api/v1/publisher/upload")
+                    .addEncodedQueryParameter("name", deploymentName)
+                    .addQueryParameter("publishingType", publishingType).build(),
+            ).post(
+                MultipartBody.Builder().addFormDataPart(
+                    FilenameUtils.getBaseName(bundleFileName),
+                    bundleFileName,
+                    bundle.asRequestBody(),
+                ).build(),
+            ).build()
+        }
+    }
+
+    private fun publishComponent(
+        deploymentName: String,
+        bundle: File,
+        publishingType: String,
+        useCookies: Boolean
     ) {
-        client
-            .newCall(
-                request
-                    .url(
-                        buildUrl()
-                            .addPathSegments("api/v1/publisher/upload")
-                            .addEncodedQueryParameter("name", deploymentName)
-                            .addQueryParameter("publishingType", publishingType)
-                            .build(),
-                    ).post(
-                        MultipartBody
-                            .Builder()
-                            .addFormDataPart(
-                                FilenameUtils.getBaseName(bundleFileName),
-                                bundleFileName,
-                                bundle.asRequestBody(),
-                            ).build(),
-                    ).build(),
-            ).execute()
-            .use {
-                val respText = it.body.string()
-                if (!it.isSuccessful) {
-                    logger.error("{}: {}", it.code, respText)
-                } else {
-                    if (publishingType == PublishingType.USER_MANAGED.name) {
-                        logger.lifecycle("Upload successful!" + System.lineSeparator())
-                        publishMsg()
-                    }
-                    if (respText.isNotEmpty()) {
-                        saveLastDeploymentId(respText)
-                    }
+        client.newCall(
+            buildRequest(deploymentName, bundle, publishingType, useCookies)
+        ).execute().use {
+            val respText = it.body.string()
+            if (!it.isSuccessful) {
+                logger.error("{}: {}", it.code, respText)
+            } else {
+                var cookiesMsg = ""
+                if (useCookies) {
+                    cookiesMsg = " (Authenticate via Cookies)"
+                }
+                if (publishingType == PublishingType.USER_MANAGED.name) {
+                    logger.lifecycle("Upload successful!$cookiesMsg" + System.lineSeparator())
+                    publishMsg()
+                }
+                if (respText.isNotEmpty()) {
+                    saveLastDeploymentId(respText)
                 }
             }
+        }
     }
 }
