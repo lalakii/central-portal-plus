@@ -22,11 +22,7 @@ abstract class AbstractTask : DefaultTask() {
 
     @get:Internal
     val client by lazy {
-        OkHttpClient.Builder()
-            .connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
-            .readTimeout(pluginContext.readTimeoutSeconds, TimeUnit.SECONDS)
-            .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS)
-            .build()
+      OkHttpClient()
     }
 
     private fun findValueByTagName(doc: org.w3c.dom.Document, nodeName: String): String? {
@@ -89,10 +85,10 @@ abstract class AbstractTask : DefaultTask() {
         val deploymentUrl = "https://central.sonatype.com/publishing/deployments"
         logger.lifecycle(
             "Due to the artifact's " +
-                "publishingType being {}{}{}" +
-                "Final confirmation is required" +
-                " on the sonatype's central portal: " +
-                "{}{}",
+                    "publishingType being {}{}{}" +
+                    "Final confirmation is required" +
+                    " on the sonatype's central portal: " +
+                    "{}{}",
             PublishingType.USER_MANAGED.name,
             System.lineSeparator(),
             System.lineSeparator(),
