@@ -25,7 +25,7 @@ abstract class BaseCentralPortalPlusExtension {
     @get:Optional
     abstract var tokenXml: URI?
 
-    var connectTimeoutSeconds: Long = 10
+    var connectTimeoutSeconds: Long = 30
 
     var readTimeoutSeconds: Long = 120
 

@@ -20,6 +20,10 @@ centralPortalPlus {
     // password = System.getenv("TEMP_PASS")
     tokenXml = uri("D:\\user_token.xml")
     publishingType = PublishingType.USER_MANAGED
+
+    writeTimeoutSeconds = 120
+    readTimeoutSeconds = 120
+    connectTimeoutSeconds = 30
 }
 signing {
     useGpgCmd()

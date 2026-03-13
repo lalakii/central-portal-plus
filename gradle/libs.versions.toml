@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.3.10"
 android-gradle = "8.13.2"
-central-portal-plus = "2.0.5"
+central-portal-plus = "2.0.6"
 central-portal-plus-last = "2.0.5"
 detekt =  "1.23.8"
 [libraries]

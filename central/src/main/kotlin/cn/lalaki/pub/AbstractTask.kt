@@ -22,7 +22,9 @@ abstract class AbstractTask : DefaultTask() {
 
     @get:Internal
     val client by lazy {
-      OkHttpClient()
+        OkHttpClient.Builder().connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
+            .readTimeout(pluginContext.readTimeoutSeconds, TimeUnit.SECONDS)
+            .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS).build()
     }
 
     private fun findValueByTagName(doc: org.w3c.dom.Document, nodeName: String): String? {
