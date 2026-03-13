@@ -50,6 +50,9 @@ class CentralPortalPlusPlugin :
             this.username = portalConf.username
             this.password = portalConf.password
             this.tokenXml = portalConf.tokenXml
+            this.connectTimeoutSeconds = portalConf.connectTimeoutSeconds
+            this.readTimeoutSeconds = portalConf.readTimeoutSeconds
+            this.writeTimeoutSeconds = portalConf.writeTimeoutSeconds
             this.publishingType = portalConf.publishingType
             val tasks = target.tasks
             val cleanLocalRepoTask =

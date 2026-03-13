@@ -25,6 +25,12 @@ abstract class BaseCentralPortalPlusExtension {
     @get:Optional
     abstract var tokenXml: URI?
 
+    var connectTimeoutSeconds: Long = 10
+
+    var readTimeoutSeconds: Long = 120
+
+    var writeTimeoutSeconds: Long = 120
+
     /***
      * The endpoint has two optional query parameters.
      *
