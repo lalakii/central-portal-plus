@@ -6,15 +6,22 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.central.portal.plus)
 }
+
+/** The sample configuration is as follows **/
 android {
     namespace = "cn.lalaki.sample"
     defaultConfig {
         compileSdk = 36
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
-/** The sample configuration is as follows **/
 group = "cn.lalaki.example"
-version = "1.0.3"
+version = "1.0.5"
 centralPortalPlus {
     // username = System.getenv("TEMP_USER")
     // password = System.getenv("TEMP_PASS")
@@ -39,7 +46,9 @@ publishing {
     }
     publications {
         create<MavenPublication>("sample") {
-            afterEvaluate { artifact(tasks.getByName("bundleReleaseAar")) }
+            afterEvaluate {
+                from(components["release"])
+            }
             pom {
                 name = "Sample library"
                 artifactId = "cn.lalaki.sample"

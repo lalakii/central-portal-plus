@@ -22,6 +22,7 @@ import java.nio.file.Paths
  * @author lalaki (i@lalaki.cn)
  * @since Classes for publishing artifacts to the publisher API.
  */
+@Suppress("NewApi")
 abstract class BasePublishingTask : AbstractTask() {
     private val params by lazy {
         ZipParameters().apply {
@@ -148,17 +149,21 @@ abstract class BasePublishingTask : AbstractTask() {
                 .post(
                     MultipartBody.Builder().setType(MultipartBody.FORM)
                         .addFormDataPart("deploymentName", deploymentName)
-                        .addFormDataPart("description", "").addFormDataPart(
+                        .addFormDataPart("description", "")
+                        .addFormDataPart(
                             "file",
                             bundle.name,
                             bundle.asRequestBody()
-                        ).build()
-                ).build()
+                        )
+                        .build()
+                )
+                .build()
         } else {
             return request.url(
                 buildUrl().addPathSegments("api/v1/publisher/upload")
                     .addEncodedQueryParameter("name", deploymentName)
-                    .addQueryParameter("publishingType", publishingType).build(),
+                    .addQueryParameter("publishingType", publishingType)
+                    .build(),
             ).post(
                 MultipartBody.Builder().addFormDataPart(
                     FilenameUtils.getBaseName(bundleFileName),
@@ -175,6 +180,7 @@ abstract class BasePublishingTask : AbstractTask() {
         publishingType: String,
         useCookies: Boolean
     ) {
+        logger.lifecycle("Processing, please wait...{}", System.lineSeparator())
         client.newCall(
             buildRequest(deploymentName, bundle, publishingType, useCookies)
         ).execute().use {

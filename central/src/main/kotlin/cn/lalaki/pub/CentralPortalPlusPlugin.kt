@@ -16,12 +16,6 @@ import java.net.URI
 class CentralPortalPlusPlugin :
     BaseCentralPortalPlusExtension(),
     Plugin<Project> {
-    companion object {
-        const val READ_TIMEOUT_DEFAULT = 120L
-        const val WRITE_TIMEOUT_DEFAULT = 120L
-        const val CONNECT_TIMEOUT_DEFAULT = 30L
-    }
-
     override var url: URI? = null
     override var username: String? = null
     override var password: String? = null
@@ -108,5 +102,11 @@ class CentralPortalPlusPlugin :
         if (writeTimeout != 0L) {
             this.writeTimeoutSeconds = writeTimeout
         }
+    }
+
+    companion object {
+        const val READ_TIMEOUT_DEFAULT = 120L
+        const val WRITE_TIMEOUT_DEFAULT = 120L
+        const val CONNECT_TIMEOUT_DEFAULT = 30L
     }
 }

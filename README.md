@@ -8,7 +8,7 @@
 
 The plugin implements sonatype's [Central Publisher API](https://central.sonatype.com/api-doc) (part of).
 
-It will call maven-publish to generate artifacts and publish them to [sonatype's central portal](https://central.sonatype.com/).
+It will call maven-publish to generate artifacts and publish them to [sonatype's central portal](https://central.sonatype.com/)
 
 Note: This is a third party plugin.
 
@@ -17,7 +17,7 @@ Note: This is a third party plugin.
 Apply this plugin in gradle:
 ```kts
 plugins {
-    id("cn.lalaki.central") version "2.0.7"
+    id("cn.lalaki.central") version "2.0.8"
 }
 ```
 
@@ -35,6 +35,7 @@ centralPortalPlus {
     // or set cookies
     cookies = "..." // Check the HTTPs headers for cookies. -> https://central.sonatype.com
     
+    // import cn.lalaki.pub.BaseCentralPortalPlusExtension.PublishingType
     publishingType = PublishingType.USER_MANAGED // or PublishingType.AUTOMATIC
 }
 ```
@@ -72,6 +73,6 @@ If you want to remove the deployment. (If no parameter is provided, the default 
 ```
 Note: deployments that have been successfully published cannot be deleted.
 
-If you need to get the deployment Id, visit: [Maven Central: Publishing](https://central.sonatype.com/publishing/deployments).
+You can track your deployment on the official website: [Maven Central: Publishing](https://central.sonatype.com/publishing/deployments)
 
 ### End for now

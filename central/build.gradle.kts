@@ -1,9 +1,9 @@
 @file:Suppress("UnstableApiUsage")
 
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
 
-val javaVersion = JavaVersion.VERSION_17.majorVersion
+val javaVersion: String = JavaVersion.VERSION_17.majorVersion
 val projectName = "CentralPortalPlus"
 val projectDescription = "Publish your artifacts to sonatype's central portal."
 val projectUrl = "https://github.com/lalakii/central-portal-plus"
@@ -90,7 +90,6 @@ centralPortalPlus {
     //username = System.getenv("TEMP_USER")
     //password = System.getenv("TEMP_PASS")
     // or
-
     tokenXml = uri("D:\\user_token.xml")
 }
 publishing {
@@ -107,5 +106,5 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.commons.io)
     implementation(libs.stdlib.jdk8)
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:${libs.versions.detekt.get()}")
+    detektPlugins(libs.detekt.formatting)
 }

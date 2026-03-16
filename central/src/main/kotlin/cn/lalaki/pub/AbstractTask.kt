@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
+import org.w3c.dom.Node
 import org.xml.sax.SAXException
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -15,6 +16,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.toPath
 
+@Suppress("NewApi")
 abstract class AbstractTask : DefaultTask() {
     @get:Internal
     abstract var pluginContext: CentralPortalPlusPlugin
@@ -24,18 +26,8 @@ abstract class AbstractTask : DefaultTask() {
         OkHttpClient.Builder()
             .connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
             .readTimeout(pluginContext.readTimeoutSeconds, TimeUnit.SECONDS)
-            .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS).build()
-    }
-
-    private fun findValueByTagName(doc: org.w3c.dom.Document, nodeName: String): String? {
-        val nodes = doc.documentElement.getElementsByTagName(nodeName)
-        if (nodes.length > 0) {
-            val item = nodes.item(0)
-            if (item != null) {
-                return item.textContent
-            }
-        }
-        return null
+            .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS)
+            .build()
     }
 
     @get:Internal
@@ -90,9 +82,9 @@ abstract class AbstractTask : DefaultTask() {
         val deploymentUrl = "https://central.sonatype.com/publishing/deployments"
         logger.lifecycle(
             "Due to the artifact's " + "publishingType being {}{}{}" +
-                "Final confirmation is required" +
-                " on the sonatype's central portal: " +
-                "{}{}",
+                    "Final confirmation is required" +
+                    " on the sonatype's central portal: " +
+                    "{}{}",
             PublishingType.USER_MANAGED.name,
             System.lineSeparator(),
             System.lineSeparator(),
@@ -102,4 +94,13 @@ abstract class AbstractTask : DefaultTask() {
     }
 
     fun buildUrl() = HttpUrl.Builder().scheme("https").host("central.sonatype.com")
+
+    private fun findValueByTagName(doc: org.w3c.dom.Document, nodeName: String): String? {
+        val nodes = doc.documentElement.getElementsByTagName(nodeName)
+        var item: Node? = null
+        if (nodes.length > 0) {
+            item = nodes.item(0)
+        }
+        return item?.textContent
+    }
 }
