@@ -11,7 +11,7 @@ plugins {
 android {
     namespace = "cn.lalaki.sample"
     defaultConfig {
-        compileSdk = 36
+        compileSdkPreview = "CinnamonBun"
     }
     publishing {
         singleVariant("release") {
@@ -21,7 +21,7 @@ android {
     }
 }
 group = "cn.lalaki.example"
-version = "1.0.5"
+version = "1.0.6"
 centralPortalPlus {
     // username = System.getenv("TEMP_USER")
     // password = System.getenv("TEMP_PASS")

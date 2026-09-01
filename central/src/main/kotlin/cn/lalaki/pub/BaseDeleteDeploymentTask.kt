@@ -1,6 +1,5 @@
 package cn.lalaki.pub
 
-import okhttp3.OkHttp
 import org.apache.commons.io.FileUtils
 import org.gradle.api.tasks.TaskAction
 import java.io.File
