@@ -17,7 +17,7 @@ Note: This is a third party plugin.
 Apply this plugin in gradle:
 ```kts
 plugins {
-    id("cn.lalaki.central") version "2.1.0"
+    id("cn.lalaki.central") version "2.2.0"
 }
 ```
 
@@ -59,9 +59,13 @@ You are now ready to start the task of publishing to the Central Portal.
 ```console
 # windows
 .\gradlew publishToCentralPortal
+# or
+.\gradlew publish
 
 # other
 ./gradlew publishToCentralPortal
+# or
+./gradlew publish
 ```
 If you need to check the status of the deployment. (If no parameter is provided, the default value will be the last deployment Id)
 ```console

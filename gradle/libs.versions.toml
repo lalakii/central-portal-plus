@@ -3,8 +3,8 @@ commons-compress2 = "1.28.0"
 detekt-formatting = "1.23.8"
 kotlin = "2.4.20"
 android-gradle = "9.4.0"
-central-portal-plus = "2.1.0"
-central-portal-plus-last = "2.1.0"
+central-portal-plus = "2.2.0"
+central-portal-plus-last = "2.0.9"
 detekt =  "2.0.0-alpha.6"
 [libraries]
 commons-compress2 = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress2" }

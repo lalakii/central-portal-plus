@@ -5,6 +5,8 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.tasks.javadoc.Javadoc
 import java.net.URI
 
 /**
@@ -70,7 +72,7 @@ class CentralPortalPlusPlugin :
             }
             val defaultPublishTask = tasks.findByName("publish")
             if (defaultPublishTask != null) {
-                defaultPublishTask.dependsOn(cleanLocalRepoTask.get())
+                defaultPublishTask.dependsOn(cleanLocalRepoTask)
                 val publishToCentralPortalTask = tasks.register(
                     "publishToCentralPortal",
                     BasePublishingTask::class.java
@@ -78,10 +80,12 @@ class CentralPortalPlusPlugin :
                     it.notCompatibleWithConfigurationCache("notCompatibleWithConfigurationCache")
                     it.dependsOn(
                         defaultPublishTask,
+                        tasks.withType(Jar::class.java),
+                        tasks.withType(Javadoc::class.java)
                     )
                     it.pluginContext = this
                 }
-                defaultPublishTask.finalizedBy(publishToCentralPortalTask.get())
+                defaultPublishTask.finalizedBy(publishToCentralPortalTask)
             } else {
                 target.logger.error("missing default publish task!")
             }

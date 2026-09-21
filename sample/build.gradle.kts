@@ -37,10 +37,14 @@ centralPortalPlus {
     readTimeoutSeconds = 60
     writeTimeoutSeconds = 60
 }
+//signing {
+//    useGpgCmd()
+//    sign(publishing.publications)
+//}
 publishing {
     repositories {
         maven {
-            url = uri("D:\\repo\\")
+            url = uri("D:\\repo")
         }
     }
     publications {

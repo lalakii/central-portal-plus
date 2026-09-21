@@ -6,22 +6,28 @@ import com.google.gson.reflect.TypeToken
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.apache.commons.compress.archivers.zip.ScatterZipOutputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
-import org.apache.commons.io.IOUtils
 import org.gradle.api.tasks.TaskAction
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntryRequest
+import org.w3c.dom.NodeList
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.Charset
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.zip.Deflater
+import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.io.path.toPath
 
 /**
- * Created on 2024-06-20
+ * Created on 2026-09-21
  *
  * @author lalaki (i@lalaki.cn)
  * @since Classes for publishing artifacts to the publisher API.
@@ -79,60 +85,113 @@ abstract class BasePublishingTask : AbstractTask() {
     ): AtomicReference<String> {
         val deploymentName = AtomicReference(bundle.name)
         FileOutputStream(bundle).use {
-            BufferedOutputStream(it).use { buffer ->
-                val zos = ZipArchiveOutputStream(buffer)
-                zos.setLevel(Deflater.BEST_COMPRESSION)
-                addDirToZip(deploymentName, dir, zos)
-                zos.close()
-            }
+            val zos = ZipArchiveOutputStream(BufferedOutputStream(it))
+            zos.setLevel(Deflater.BEST_COMPRESSION)
+            val sos = ScatterZipOutputStream.fileBased(
+                File.createTempFile(
+                    "bundle_${System.nanoTime()}", ".tmp"
+                )
+            )
+            addDirToZip(deploymentName, dir, sos)
+            sos.writeTo(zos)
+            zos.close()
         }
         return deploymentName
     }
 
     private fun addDirToZip(
-        deploymentName: AtomicReference<String>, dir: File, zos: ZipArchiveOutputStream
+        deploymentName: AtomicReference<String>, dir: File, sos: ScatterZipOutputStream
     ) {
         val pomExt = ".pom"
         val parent = dir.toPath().parent.toAbsolutePath()
         val builder = ProcessBuilder()
-        FileUtils.listFiles(dir, null, true).forEach {
+        val cores = Runtime.getRuntime().availableProcessors()
+        val poolSize = 4.coerceAtLeast(cores) * 2
+        val executor = ThreadPoolExecutor(
+            poolSize,
+            poolSize * 2,
+            0L,
+            TimeUnit.MILLISECONDS,
+            ArrayBlockingQueue(1024),
+            { runnable ->
+                Thread(runnable, "central-gpg-signing")
+            },
+            ThreadPoolExecutor.CallerRunsPolicy()
+        )
+        val noNeedSign = hashSetOf("asc", "md5", "sha1", "sha256", "sha512")
+        // sign
+        FileUtils.listFiles(dir, null, true).filter {
+            !it.name.startsWith("maven-metadata.xml", ignoreCase = true)
+        }.filter {
+            it.isFile
+        }.filter {
+            !noNeedSign.contains(FilenameUtils.getExtension(it.name))
+        }.forEach {
+            val ascFile = File("${it.absolutePath}.asc")
+            if (!ascFile.isFile) {
+                executor.execute {
+                    signUseGpgCmd(builder, it.absolutePath)
+                }
+            }
+        }
+        executor.shutdown()
+        executor.awaitTermination(300, TimeUnit.SECONDS)
+        val noNeedHash = hashSetOf("sha256", "sha512")
+        FileUtils.listFiles(dir, null, true).filter {
+            !it.name.startsWith("maven-metadata.xml", ignoreCase = true)
+        }.filter { !noNeedHash.contains(FilenameUtils.getExtension(it.name)) }.forEach {
             val addName = it.name.endsWith(pomExt, ignoreCase = true)
             if (addName) {
                 deploymentName.set(FilenameUtils.getBaseName(it.name))
+                try {
+                    val document =
+                        DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(it)
+                    document.documentElement.normalize()
+                    val nameValue = getNodeText(document.getElementsByTagName("name"));
+                    if (nameValue != null) {
+                        val versionValue = getNodeText(document.getElementsByTagName("version"));
+                        deploymentName.set("$nameValue - $versionValue")
+                    }
+                } catch (_: Throwable) {
+                }
             }
             if (it.isFile) {
-                val ascFile = autoSign(builder, it.absolutePath)
                 val entry = ZipArchiveEntry(parent.relativize(it.toPath()).toString())
+                entry.method = Deflater.DEFLATED
                 entry.unixMode = 32768 or 420
-                zos.putArchiveEntry(entry)
-                IOUtils.copy(it.toURI().toURL(), zos)
-                zos.closeArchiveEntry()
-                if (ascFile != null) {
-                    val ascEntry = ZipArchiveEntry(parent.relativize(ascFile.toPath()).toString())
-                    entry.unixMode = 32768 or 420
-                    zos.putArchiveEntry(ascEntry)
-                    IOUtils.copy(ascFile.toURI().toURL(), zos)
-                    zos.closeArchiveEntry()
+                it.inputStream().use { ins ->
+                    sos.addArchiveEntry(ZipArchiveEntryRequest.createZipArchiveEntryRequest(entry) { ins })
                 }
             }
         }
     }
 
-    private fun autoSign(builder: ProcessBuilder, filePath: String): File? {
-        if (!FilenameUtils.getExtension(filePath).equals("asc", ignoreCase = true)) {
-            try {
-                if (builder.command("gpg", "--armor", "--detach-sign", filePath).start()
-                        .waitFor() == 0
-                ) {
-                    val ascFile = File("${filePath}.asc")
-                    if (ascFile.isFile) {
-                        return ascFile
-                    }
+    private fun getNodeText(nodes: NodeList): String? {
+        if (nodes.length > 0) {
+            val node = nodes.item(0)
+            if (node != null) {
+                val text = node.textContent
+                if (!text.isNullOrBlank()) {
+                    return text
                 }
-            } catch (_: Throwable) {
             }
         }
         return null
+    }
+
+    private fun signUseGpgCmd(builder: ProcessBuilder, filePath: String) {
+        var errorCount = 0
+        while (errorCount < 5) {
+            try {
+                val signProc =
+                    builder.command("gpg", "--yes", "--armor", "--detach-sign", filePath).start()
+                if (signProc.waitFor(10, TimeUnit.SECONDS) && signProc.exitValue() == 0) {
+                    break
+                }
+            } catch (_: Throwable) {
+            }
+            errorCount++
+        }
     }
 
     private fun getDeploymentIdFromJson(jsonText: String): String? {
