@@ -3,18 +3,22 @@ package cn.lalaki.pub
 import cn.lalaki.pub.BaseCentralPortalPlusExtension.PublishingType
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.model.enums.CompressionLevel
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
+import org.apache.commons.io.IOUtils
 import org.gradle.api.tasks.TaskAction
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.nio.charset.Charset
-import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicReference
+import java.util.zip.Deflater
+import kotlin.io.path.toPath
 
 /**
  * Created on 2024-06-20
@@ -24,12 +28,6 @@ import java.nio.file.Paths
  */
 @Suppress("NewApi")
 abstract class BasePublishingTask : AbstractTask() {
-    private val params by lazy {
-        ZipParameters().apply {
-            compressionLevel = CompressionLevel.ULTRA
-            setExcludeFileFilter { it.name.contains("maven-metadata.xml", ignoreCase = true) }
-        }
-    }
     private val bundleFileName = "bundle.zip"
 
     /***
@@ -37,9 +35,11 @@ abstract class BasePublishingTask : AbstractTask() {
      */
     @TaskAction
     fun launch() {
-        val url =
-            pluginContext.url ?: throw NullPointerException("missing local maven repo, url=" + null)
-        val dir = Paths.get(url).toFile()
+        val url = pluginContext.url
+        if (!url.isPresent) {
+            throw NullPointerException("missing local maven repo, url=" + null)
+        }
+        val dir = url.get().toPath().toFile()
         if (!dir.isDirectory) {
             logger.error("local maven repo ({}) is not a folder!", dir)
             return
@@ -49,12 +49,12 @@ abstract class BasePublishingTask : AbstractTask() {
             logger.error("local maven repo ({}) is empty!", dir)
             return
         }
-        var publishingType = pluginContext.publishingType
-        if (publishingType == null) {
-            publishingType = PublishingType.USER_MANAGED
+        val publishingType = pluginContext.publishingType
+        if (!publishingType.isPresent) {
+            publishingType.set(PublishingType.USER_MANAGED)
         }
         createBundleForAllGroups(
-            publishingType.name,
+            publishingType.get().name,
             File(dir.absolutePath, bundleFileName),
             groups,
         )
@@ -66,27 +66,73 @@ abstract class BasePublishingTask : AbstractTask() {
         groups: Array<File>,
     ) {
         val useCookies =
-            pluginContext.username == null && pluginContext.password == null && pluginContext.tokenXml == null
+            !pluginContext.username.isPresent && !pluginContext.password.isPresent && !pluginContext.tokenXml.isPresent
         for (group in groups) {
             val deploymentName = createBundleZip(bundle, group)
-            publishComponent(deploymentName, bundle, publishingType, useCookies)
+            publishComponent(deploymentName.get(), bundle, publishingType, useCookies)
         }
     }
 
     private fun createBundleZip(
         bundle: File,
         dir: File,
-    ): String {
-        var deploymentName = bundle.name
-        ZipFile(bundle).use { zip ->
-            zip.addFolder(dir, params)
-            val pomExt = ".pom"
-            val pomHeader = zip.fileHeaders.find { it.fileName.endsWith(pomExt, ignoreCase = true) }
-            if (pomHeader != null) {
-                deploymentName = FilenameUtils.getBaseName(pomHeader.fileName)
+    ): AtomicReference<String> {
+        val deploymentName = AtomicReference(bundle.name)
+        FileOutputStream(bundle).use {
+            BufferedOutputStream(it).use { buffer ->
+                val zos = ZipArchiveOutputStream(buffer)
+                zos.setLevel(Deflater.BEST_COMPRESSION)
+                addDirToZip(deploymentName, dir, zos)
+                zos.close()
             }
         }
         return deploymentName
+    }
+
+    private fun addDirToZip(
+        deploymentName: AtomicReference<String>, dir: File, zos: ZipArchiveOutputStream
+    ) {
+        val pomExt = ".pom"
+        val parent = dir.toPath().parent.toAbsolutePath()
+        val builder = ProcessBuilder()
+        FileUtils.listFiles(dir, null, true).forEach {
+            val addName = it.name.endsWith(pomExt, ignoreCase = true)
+            if (addName) {
+                deploymentName.set(FilenameUtils.getBaseName(it.name))
+            }
+            if (it.isFile) {
+                val ascFile = autoSign(builder, it.absolutePath)
+                val entry = ZipArchiveEntry(parent.relativize(it.toPath()).toString())
+                entry.unixMode = 32768 or 420
+                zos.putArchiveEntry(entry)
+                IOUtils.copy(it.toURI().toURL(), zos)
+                zos.closeArchiveEntry()
+                if (ascFile != null) {
+                    val ascEntry = ZipArchiveEntry(parent.relativize(ascFile.toPath()).toString())
+                    entry.unixMode = 32768 or 420
+                    zos.putArchiveEntry(ascEntry)
+                    IOUtils.copy(ascFile.toURI().toURL(), zos)
+                    zos.closeArchiveEntry()
+                }
+            }
+        }
+    }
+
+    private fun autoSign(builder: ProcessBuilder, filePath: String): File? {
+        if (!FilenameUtils.getExtension(filePath).equals("asc", ignoreCase = true)) {
+            try {
+                if (builder.command("gpg", "--armor", "--detach-sign", filePath).start()
+                        .waitFor() == 0
+                ) {
+                    val ascFile = File("${filePath}.asc")
+                    if (ascFile.isFile) {
+                        return ascFile
+                    }
+                }
+            } catch (_: Throwable) {
+            }
+        }
+        return null
     }
 
     private fun getDeploymentIdFromJson(jsonText: String): String? {
@@ -122,8 +168,7 @@ abstract class BasePublishingTask : AbstractTask() {
                 Charset.defaultCharset(),
             )
             if (allLines.find { line -> line.contains(lastDeployment.name, ignoreCase = true) }
-                    .isNullOrEmpty()
-            ) {
+                    .isNullOrEmpty()) {
                 allLines.add(lastDeployment.name)
             }
             FileUtils.writeLines(ignore, allLines)
@@ -137,33 +182,23 @@ abstract class BasePublishingTask : AbstractTask() {
     }
 
     private fun buildRequest(
-        deploymentName: String,
-        bundle: File,
-        publishingType: String,
-        useCookies: Boolean
+        deploymentName: String, bundle: File, publishingType: String, useCookies: Boolean
     ): Request {
         if (useCookies) {
             return request.url(
                 buildUrl().addPathSegments("api/internal/publisher/uploadFile").build()
-            )
-                .post(
-                    MultipartBody.Builder().setType(MultipartBody.FORM)
-                        .addFormDataPart("deploymentName", deploymentName)
-                        .addFormDataPart("description", "")
-                        .addFormDataPart(
-                            "file",
-                            bundle.name,
-                            bundle.asRequestBody()
-                        )
-                        .build()
-                )
-                .build()
+            ).post(
+                MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("deploymentName", deploymentName)
+                    .addFormDataPart("description", "").addFormDataPart(
+                        "file", bundle.name, bundle.asRequestBody()
+                    ).build()
+            ).build()
         } else {
             return request.url(
                 buildUrl().addPathSegments("api/v1/publisher/upload")
                     .addEncodedQueryParameter("name", deploymentName)
-                    .addQueryParameter("publishingType", publishingType)
-                    .build(),
+                    .addQueryParameter("publishingType", publishingType).build(),
             ).post(
                 MultipartBody.Builder().addFormDataPart(
                     FilenameUtils.getBaseName(bundleFileName),
@@ -175,10 +210,7 @@ abstract class BasePublishingTask : AbstractTask() {
     }
 
     private fun publishComponent(
-        deploymentName: String,
-        bundle: File,
-        publishingType: String,
-        useCookies: Boolean
+        deploymentName: String, bundle: File, publishingType: String, useCookies: Boolean
     ) {
         logger.lifecycle("Processing, please wait...{}", System.lineSeparator())
         client.newCall(

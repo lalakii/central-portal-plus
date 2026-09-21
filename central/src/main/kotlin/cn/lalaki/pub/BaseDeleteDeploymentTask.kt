@@ -22,8 +22,7 @@ abstract class BaseDeleteDeploymentTask : AbstractTask() {
             return
         }
         val useCookies =
-            pluginContext.username == null && pluginContext.password == null && pluginContext.tokenXml == null
-
+            !pluginContext.username.isPresent && !pluginContext.password.isPresent && !pluginContext.tokenXml.isPresent
         if (useCookies) {
             deleteDeploymentWithCookies(id, lastDeployment)
         } else {

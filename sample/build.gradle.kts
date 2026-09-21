@@ -21,22 +21,21 @@ android {
     }
 }
 group = "cn.lalaki.example"
-version = "1.0.6"
+version = "1.0.9"
 centralPortalPlus {
     // username = System.getenv("TEMP_USER")
     // password = System.getenv("TEMP_PASS")
+
     tokenXml = uri("D:\\user_token.xml")
+
     // cookies = System.getenv("YOUR_COOKIES")
+
     publishingType = PublishingType.USER_MANAGED
 
     // network timeout
     connectTimeoutSeconds = 30
     readTimeoutSeconds = 60
     writeTimeoutSeconds = 60
-}
-signing {
-    useGpgCmd()
-    sign(publishing.publications)
 }
 publishing {
     repositories {

@@ -102,7 +102,7 @@ publishing {
 dependencies {
     compileOnly(gradleApi())
     implementation(libs.gson)
-    implementation(libs.zip4j)
+    implementation(libs.commons.compress2)
     implementation(libs.okhttp)
     implementation(libs.commons.io)
     implementation(libs.stdlib.jdk8)

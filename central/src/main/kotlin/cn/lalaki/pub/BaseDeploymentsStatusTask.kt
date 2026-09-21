@@ -22,7 +22,7 @@ abstract class BaseDeploymentsStatusTask : AbstractTask() {
         }
         if (id.isNotEmpty()) {
             val useCookies =
-                pluginContext.username == null && pluginContext.password == null && pluginContext.tokenXml == null
+                !pluginContext.username.isPresent && !pluginContext.password.isPresent && !pluginContext.tokenXml.isPresent
             if (useCookies) {
                 getDeploymentStatusWithCookies(id)
             } else {

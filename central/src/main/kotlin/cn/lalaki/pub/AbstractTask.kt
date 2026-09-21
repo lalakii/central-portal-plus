@@ -13,7 +13,6 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.io.path.Path
-import kotlin.io.path.isRegularFile
 import kotlin.io.path.toPath
 
 @Suppress("NewApi")
@@ -24,9 +23,9 @@ abstract class AbstractTask : DefaultTask() {
     @get:Internal
     val client by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(pluginContext.connectTimeoutSeconds, TimeUnit.SECONDS)
-            .readTimeout(pluginContext.readTimeoutSeconds, TimeUnit.SECONDS)
-            .writeTimeout(pluginContext.writeTimeoutSeconds, TimeUnit.SECONDS)
+            .connectTimeout(pluginContext.connectTimeoutSeconds.getOrElse(CONNECT_TIMEOUT_DEFAULT), TimeUnit.SECONDS)
+            .readTimeout(pluginContext.readTimeoutSeconds.getOrElse(READ_TIMEOUT_DEFAULT), TimeUnit.SECONDS)
+            .writeTimeout(pluginContext.writeTimeoutSeconds.getOrElse(WRITE_TIMEOUT_DEFAULT), TimeUnit.SECONDS)
             .build()
     }
 
@@ -34,13 +33,13 @@ abstract class AbstractTask : DefaultTask() {
     val request by lazy {
         var username = pluginContext.username
         var password = pluginContext.password
-        val tokenXml = pluginContext.tokenXml?.toPath()
-        if (tokenXml?.isRegularFile() == true) {
+        val tokenXml = pluginContext.tokenXml
+        if (tokenXml.isPresent) {
             try {
                 val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                    .parse(tokenXml.toFile())
-                username = findValueByTagName(doc, "username")
-                password = findValueByTagName(doc, "password")
+                    .parse(tokenXml.get().toPath().toFile())
+                username.set(findValueByTagName(doc, "username"))
+                password.set(findValueByTagName(doc, "password"))
             } catch (e: IOException) {
                 logger.error(e.localizedMessage)
             } catch (e: SAXException) {
@@ -48,17 +47,17 @@ abstract class AbstractTask : DefaultTask() {
             }
         }
         val cookies = pluginContext.cookies
-        if (username == null || password == null) {
-            if (cookies != null) {
-                return@lazy Request.Builder().addHeader("Cookie", cookies)
+        if (!username.isPresent || !password.isPresent) {
+            if (cookies.isPresent) {
+                return@lazy Request.Builder().addHeader("Cookie", cookies.getOrElse(""))
             }
             throw SecurityException("No username or password set.")
         }
         Request.Builder().addHeader(
             "Authorization",
             basic(
-                username,
-                password,
+                username.get(),
+                password.get(),
             ).replace("Basic", "Bearer"),
         )
     }
@@ -102,5 +101,11 @@ abstract class AbstractTask : DefaultTask() {
             item = nodes.item(0)
         }
         return item?.textContent
+    }
+
+    companion object {
+        const val READ_TIMEOUT_DEFAULT = 120L
+        const val WRITE_TIMEOUT_DEFAULT = 120L
+        const val CONNECT_TIMEOUT_DEFAULT = 30L
     }
 }

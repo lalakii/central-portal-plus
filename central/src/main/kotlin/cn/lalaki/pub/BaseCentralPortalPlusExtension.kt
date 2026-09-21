@@ -1,5 +1,7 @@
 package cn.lalaki.pub
 
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import java.net.URI
 
@@ -10,32 +12,41 @@ import java.net.URI
  * @since extension class
  */
 abstract class BaseCentralPortalPlusExtension {
+    @get:Input
     @get:Optional
-    abstract var username: String?
+    abstract val username: Property<String>
 
+    @get:Input
     @get:Optional
-    abstract var password: String?
+    abstract val password: Property<String>
 
+    @get:Input
     @get:Optional
-    abstract var tokenXml: URI?
+    abstract val tokenXml: Property<URI>
 
+    @get:Input
     @get:Optional
-    abstract var cookies: String?
+    abstract val cookies: Property<String>
 
+    @get:Input
     @get:Optional
-    abstract var publishingType: PublishingType?
+    abstract val publishingType: Property<PublishingType>
 
+    @get:Input
     @get:Optional
-    abstract var url: URI?
+    abstract val url: Property<URI>
 
+    @get:Input
     @get:Optional
-    abstract var connectTimeoutSeconds: Long
+    abstract val connectTimeoutSeconds: Property<Long>
 
+    @get:Input
     @get:Optional
-    abstract var readTimeoutSeconds: Long
+    abstract val readTimeoutSeconds: Property<Long>
 
+    @get:Input
     @get:Optional
-    abstract var writeTimeoutSeconds: Long
+    abstract val writeTimeoutSeconds: Property<Long>
 
     /***
      * The endpoint has two optional query parameters.

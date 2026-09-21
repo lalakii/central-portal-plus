@@ -4,8 +4,8 @@ import org.apache.commons.io.FileUtils
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
-import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import kotlin.io.path.toPath
 
 /**
  * Created on 2024-06-21
@@ -20,8 +20,9 @@ abstract class BaseCleanLocalMavenRepoTask : AbstractTask() {
      */
     @TaskAction
     fun launch() {
-        val url = pluginContext.url ?: return
-        val localMaven = Paths.get(url).toFile()
+        val url = pluginContext.url
+        if (!url.isPresent) return
+        val localMaven = url.get().toPath().toFile()
         if (localMaven.parent == null) {
             logger.error(
                 "It is not allowed to use the root directory ({}) as a local maven repo!",

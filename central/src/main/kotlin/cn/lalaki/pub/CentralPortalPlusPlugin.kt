@@ -3,6 +3,7 @@ package cn.lalaki.pub
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import java.net.URI
 
@@ -16,15 +17,15 @@ import java.net.URI
 class CentralPortalPlusPlugin :
     BaseCentralPortalPlusExtension(),
     Plugin<Project> {
-    override var url: URI? = null
-    override var username: String? = null
-    override var password: String? = null
-    override var cookies: String? = null
-    override var tokenXml: URI? = null
-    override var publishingType: PublishingType? = null
-    override var connectTimeoutSeconds: Long = CONNECT_TIMEOUT_DEFAULT
-    override var readTimeoutSeconds: Long = READ_TIMEOUT_DEFAULT
-    override var writeTimeoutSeconds: Long = WRITE_TIMEOUT_DEFAULT
+    override lateinit var url: Property<URI>
+    override lateinit var username: Property<String>
+    override lateinit var password: Property<String>
+    override lateinit var cookies: Property<String>
+    override lateinit var tokenXml: Property<URI>
+    override lateinit var publishingType: Property<PublishingType>
+    override lateinit var connectTimeoutSeconds: Property<Long>
+    override lateinit var readTimeoutSeconds: Property<Long>
+    override lateinit var writeTimeoutSeconds: Property<Long>
     lateinit var workDir: String
 
     override fun apply(target: Project) {
@@ -36,33 +37,35 @@ class CentralPortalPlusPlugin :
                 "centralPortalPlus",
                 BaseCentralPortalPlusExtension::class.java,
             )
+        this.url = portalConf.url
         target.afterEvaluate { _ ->
             workDir = target.layout.projectDirectory.asFile.canonicalPath
-            if (portalConf.url == null) {
+            if (!portalConf.url.isPresent) {
                 val publishConf =
                     target.extensions.findByType(PublishingExtension::class.java)
                 if (publishConf is PublishingExtension) {
                     val localMavenRepo =
                         publishConf.repositories.find { it is MavenArtifactRepository }
                     if (localMavenRepo is MavenArtifactRepository) {
-                        this.url = localMavenRepo.url
+                        this.url.set(localMavenRepo.url)
                     }
                 }
-            } else {
-                this.url = portalConf.url
             }
             loadUserConfig(portalConf)
             val tasks = target.tasks
             val cleanLocalRepoTask =
                 tasks.register("cleanLocalMavenRepo", BaseCleanLocalMavenRepoTask::class.java) {
+                    it.notCompatibleWithConfigurationCache("notCompatibleWithConfigurationCache")
                     it.pluginContext = this
                 }
             val defaultCleanTask = tasks.findByName("clean")
             defaultCleanTask?.finalizedBy(cleanLocalRepoTask.get())
             tasks.register("dumpDeployment", BaseDeploymentsStatusTask::class.java) {
+                it.notCompatibleWithConfigurationCache("notCompatibleWithConfigurationCache")
                 it.pluginContext = this
             }
             tasks.register("deleteDeployment", BaseDeleteDeploymentTask::class.java) {
+                it.notCompatibleWithConfigurationCache("notCompatibleWithConfigurationCache")
                 it.pluginContext = this
             }
             val defaultPublishTask = tasks.findByName("publish")
@@ -72,6 +75,7 @@ class CentralPortalPlusPlugin :
                     "publishToCentralPortal",
                     BasePublishingTask::class.java
                 ) {
+                    it.notCompatibleWithConfigurationCache("notCompatibleWithConfigurationCache")
                     it.dependsOn(
                         defaultPublishTask,
                     )
@@ -90,23 +94,9 @@ class CentralPortalPlusPlugin :
         this.tokenXml = portalConf.tokenXml
         this.cookies = portalConf.cookies
         this.publishingType = portalConf.publishingType
-        val connectTimeout = portalConf.connectTimeoutSeconds
-        if (connectTimeout != 0L) {
-            this.connectTimeoutSeconds = connectTimeout
-        }
-        val readTimeout = portalConf.readTimeoutSeconds
-        if (readTimeout != 0L) {
-            this.readTimeoutSeconds = readTimeout
-        }
-        val writeTimeout = portalConf.writeTimeoutSeconds
-        if (writeTimeout != 0L) {
-            this.writeTimeoutSeconds = writeTimeout
-        }
+        this.connectTimeoutSeconds = portalConf.connectTimeoutSeconds
+        this.readTimeoutSeconds = portalConf.readTimeoutSeconds
+        this.writeTimeoutSeconds = portalConf.writeTimeoutSeconds
     }
 
-    companion object {
-        const val READ_TIMEOUT_DEFAULT = 120L
-        const val WRITE_TIMEOUT_DEFAULT = 120L
-        const val CONNECT_TIMEOUT_DEFAULT = 30L
-    }
 }

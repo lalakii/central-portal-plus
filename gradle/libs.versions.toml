@@ -1,20 +1,21 @@
 [versions]
+commons-compress2 = "1.28.0"
 detekt-formatting = "1.23.8"
-kotlin = "2.4.10"
-android-gradle = "9.3.2"
-central-portal-plus = "2.0.9"
-central-portal-plus-last = "2.0.9"
+kotlin = "2.4.20"
+android-gradle = "9.4.0"
+central-portal-plus = "2.1.0"
+central-portal-plus-last = "2.1.0"
 detekt =  "2.0.0-alpha.6"
 [libraries]
+commons-compress2 = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress2" }
 commons-io = { module = "commons-io:commons-io", version = "2.22.0" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt-formatting" }
 gson = { module = "com.google.code.gson:gson", version = "2.14.0" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version = "5.5.0" }
-zip4j = { module = "net.lingala.zip4j:zip4j", version = "2.11.6" }
 stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 [plugins]
 android-library = { id = "com.android.library", version.ref = "android-gradle" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-gradle-publish = { id = "com.gradle.plugin-publish", version = "2.1.1" }
+gradle-publish = { id = "com.gradle.plugin-publish", version = "2.2.1" }
 central-portal-plus = { id = "cn.lalaki.central", version.ref = "central-portal-plus" }
 detekt = { id = "dev.detekt", version.ref="detekt" }
