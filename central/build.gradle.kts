@@ -13,7 +13,7 @@ version = central.version
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.central.portal.plus) version libs.versions.central.portal.plus.last
+    alias(libs.plugins.central.portal.plus) version (libs.versions.central.portal.plus.last)
     alias(libs.plugins.gradle.publish)
     alias(libs.plugins.detekt)
 }
@@ -36,10 +36,10 @@ tasks.withType<Detekt>().configureEach {
 tasks.withType<DetektCreateBaselineTask>().configureEach {
     jvmTarget = javaVersion
 }
-signing {
-    useGpgCmd()
-    sign(publishing.publications)
-}
+//signing {
+//    useGpgCmd()
+//    sign(publishing.publications)
+//}
 gradlePlugin {
     website = projectUrl
     vcsUrl = projectUrl
@@ -49,11 +49,14 @@ gradlePlugin {
             displayName = projectName
             description = projectDescription
             tags = listOf("maven", "maven-central", "publisher", "sonatype", "gradle-plugin")
-            implementationClass = "cn.lalaki.pub.CentralPortalPlusPlugin"
+            implementationClass = "cn.lalaki.MiniCentral"
         }
     }
 }
 afterEvaluate {
+    (extensions.getByName("signing") as? SigningExtension)?.apply {
+        useGpgCmd()
+    }
     tasks.withType(GenerateMavenPom::class.java) {
         pom.apply {
             name = projectName
@@ -66,37 +69,38 @@ afterEvaluate {
                 }
             }
             issueManagement {
+                system = "Github"
                 url = "${projectUrl}/issues"
             }
             developers {
                 developer {
-                    name = "lalakii"
+                    id = "lalaki"
+                    name = "lalaki"
                     email = "i@lalaki.cn"
+                    roles = listOf("developer")
+                    timezone = "Asia/Chongqing"
+                    organization = "lalaki"
+                    organizationUrl = "https://lalaki.cn"
                 }
             }
             organization {
-                name = "lalakii"
+                name = "lalaki"
                 url = "https://lalaki.cn"
             }
             scm {
-                connection = "scm:git:$projectUrl"
-                developerConnection = "scm:git:$projectUrl"
+                connection = "scm:git:${projectUrl}.git"
+                developerConnection = "scm:git:${projectUrl}.git"
                 url = projectUrl
             }
         }
     }
 }
 centralPortalPlus {
-    //username = System.getenv("TEMP_USER")
-    //password = System.getenv("TEMP_PASS")
-    // or
     tokenXml = uri("D:\\user_token.xml")
 }
 publishing {
     repositories {
-        maven {
-            url = uri("./repo/")
-        }
+        mavenLocal()
     }
 }
 dependencies {

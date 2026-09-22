@@ -1,0 +1,7 @@
+unset_token=Authentication token is missing!
+publish_success={}Due to the artifact's publishingType being {}{}{}Final confirmation is required on the sonatype's central portal: {}{}{}
+cookies_unsupported=SNAPSHOT repositories do not support cookie authentication. Use an access token.
+release_error=Current version: "%s". Please remove the "-SNAPSHOT" suffix.
+snapshot_error=Current version: "%s". Please add the "-SNAPSHOT" suffix.
+delete=Deployment dropped successfully.
+delete_failed=[{}]{}401: The user does not have an active session or is not authenticated.{}403: The user is not authorized to perform this action.{}404: Deployment not found.{}500: Internal server error.

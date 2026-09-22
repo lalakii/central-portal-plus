@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-import cn.lalaki.pub.BaseCentralPortalPlusExtension.PublishingType
+import cn.lalaki.pub.PublishingType
 
 plugins {
     alias(libs.plugins.android.library)
@@ -9,18 +9,18 @@ plugins {
 
 /** The sample configuration is as follows **/
 android {
-    namespace = "cn.lalaki.sample"
+    namespace = "icu.lalaki.sample"
     defaultConfig {
         compileSdkPreview = "CinnamonBun"
     }
     publishing {
         singleVariant("release") {
-            withSourcesJar()
             withJavadocJar()
+            withSourcesJar()
         }
     }
 }
-group = "cn.lalaki.example"
+group = "icu.lalaki.example"
 version = "1.0.9"
 centralPortalPlus {
     // username = System.getenv("TEMP_USER")
@@ -30,31 +30,36 @@ centralPortalPlus {
 
     // cookies = System.getenv("YOUR_COOKIES")
 
+    /** import cn.lalaki.pub.PublishingType
+    1. PublishingType.AUTOMATIC
+    2. PublishingType.USER_MANAGED
+    3. PublishingType.SNAPSHOT
+     */
     publishingType = PublishingType.USER_MANAGED
 
     // network timeout
-    connectTimeoutSeconds = 30
+    connectTimeoutSeconds = 15
     readTimeoutSeconds = 60
     writeTimeoutSeconds = 60
+
+    // auto clean local build
+    autoClean = true
+
+    // quiet, hide some logs
+    quiet = false
 }
-//signing {
-//    useGpgCmd()
-//    sign(publishing.publications)
-//}
 publishing {
     repositories {
-        maven {
-            url = uri("D:\\repo")
-        }
+        mavenLocal()
     }
     publications {
-        create<MavenPublication>("sample") {
+        create<MavenPublication>("release") {
             afterEvaluate {
                 from(components["release"])
             }
             pom {
                 name = "Sample library"
-                artifactId = "cn.lalaki.sample"
+                artifactId = "Samplelibrary"
                 description = "A concise description of my sample"
                 url = "http://www.example.com/sample"
                 licenses {
@@ -65,14 +70,23 @@ publishing {
                 }
                 developers {
                     developer {
-                        name = "lalakii"
+                        id = "lalaki"
+                        name = "lalaki"
                         email = "sample@example.com"
+                        roles = listOf("developer")
+                        timezone = "Asia/Chongqing"
+                        organization = "lalaki"
+                        organizationUrl = "https://lalaki.cn"
                     }
                 }
                 scm {
                     connection = "scm:git:git://example.com/sample.git"
                     developerConnection = "scm:git:ssh://example.com/sample.git"
                     url = "http://example.com/sample/"
+                }
+                issueManagement {
+                    system = "Github"
+                    url = "https://github.com/lalakii/central-portal-plus/issues"
                 }
             }
         }

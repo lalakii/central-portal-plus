@@ -1,5 +1,13 @@
+import org.gradle.kotlin.dsl.maven
+
 pluginManagement {
     repositories {
+        maven {
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            mavenContent {
+                snapshotsOnly()
+            }
+    }
         mavenCentral()
         gradlePluginPortal()
         google()
